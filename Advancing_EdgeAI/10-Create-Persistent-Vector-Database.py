@@ -4,10 +4,22 @@
 # 10 Create Persistent Vector Database for RAG
 #  - Edge AI
 
+'''
+Install:
+- pip install -U 'langchain-chroma'
+- pip install -U langchain
+- pip install -U langchain-community
+- pip install -U langchain-ollama
+- pip install -U langchain-text-splitter
+- pip install -U langchain-community pypdf
+- pip install tiktoken
+
+
+'''
 
 import warnings
 import os
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_ollama import OllamaEmbeddings
