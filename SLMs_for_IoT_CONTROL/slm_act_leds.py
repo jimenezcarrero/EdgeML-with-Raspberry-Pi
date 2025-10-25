@@ -1,5 +1,5 @@
 import ollama
-from monitor import collect_data, led_status
+from monitor import collect_data, led_status, control_leds
 
 
 prompt = f"""
