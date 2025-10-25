@@ -66,7 +66,7 @@ def output_actuator(response, MODEL):
 
 if __name__ == "__main__":
 
-MODEL = 'llama3.2:1b'
+MODEL = 'llama3.2:3b'
 PROMPT = prompt
 
 # Get system info
