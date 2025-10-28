@@ -1,24 +1,13 @@
 import ollama
-from pydantic import BaseModel, Field
+import json
 from monitor import collect_data, led_status, control_leds
-
-
-# Pydantic models for structured output
-class LEDControl(BaseModel):
-    """LED control configuration."""
-    red_led: bool = Field(description="Red LED state (on/off)")
-    yellow_led: bool = Field(description="Yellow LED state (on/off)")
-    green_led: bool = Field(description="Green LED state (on/off)")
-
-
-class AssistantResponse(BaseModel):
-    """Complete assistant response with message and LED control."""
-    message: str = Field(description="Helpful response to the user")
-    leds: LEDControl = Field(description="LED control configuration")
 
 
 # System message that defines the assistant's behavior (sent once at initialization)
 SYSTEM_MESSAGE = """You are an IoT assistant controlling an environmental monitoring system with LEDs.
+
+Respond with JSON only:
+{"message": "your helpful response", "leds": {"red_led": bool, "yellow_led": bool, "green_led": bool}}
 
 RULES:
 - Information queries: keep current LED states unchanged
@@ -27,7 +16,7 @@ RULES:
 - Only ONE LED should be on at a time UNLESS user explicitly says "all"
 - Be concise and conversational
 
-Your response will be automatically formatted as JSON with 'message' and 'leds' fields."""
+Always respond with valid JSON containing both "message" and "leds" fields."""
 
 
 def create_interactive_prompt(temp_dht, hum, temp_bmp, press, 
@@ -39,31 +28,40 @@ USER: {user_input}"""
 
 
 def slm_inference(messages, MODEL):
-    """Send chat request to Ollama using chat API with structured output (Pydantic)."""
+    """Send chat request to Ollama using chat API (optimized version)."""
     response = ollama.chat(
         model=MODEL,
-        messages=messages,
-        format=AssistantResponse.model_json_schema()  # Constrained decoding with Pydantic schema
+        messages=messages
     )
     return response
 
 
 def parse_interactive_response(response_text):
-    """Parse the interactive SLM response using Pydantic (guaranteed valid)."""
+    """Parse the interactive SLM JSON response."""
     try:
-        # Parse directly into Pydantic model - guaranteed valid JSON structure
-        data = AssistantResponse.model_validate_json(response_text)
+        # Clean the response
+        response_text = response_text.strip()
+        if response_text.startswith('```'):
+            lines = response_text.split('\n')
+            response_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else response_text
+            response_text = response_text.replace('```json', '').replace('```', '').strip()
         
-        # Extract values from Pydantic model
-        message = data.message
-        red_led = data.leds.red_led
-        yellow_led = data.leds.yellow_led
-        green_led = data.leds.green_led
+        # Parse JSON
+        data = json.loads(response_text)
+        
+        # Extract message
+        message = data.get('message', 'No response provided.')
+        
+        # Extract LED states
+        leds = data.get('leds', {})
+        red_led = leds.get('red_led', False)
+        yellow_led = leds.get('yellow_led', False)
+        green_led = leds.get('green_led', False)
         
         return message, (red_led, yellow_led, green_led)
     
-    except Exception as e:
-        print(f"Error parsing response: {e}")
+    except (json.JSONDecodeError, KeyError) as e:
+        print(f"Error parsing JSON response: {e}")
         print(f"Response was: {response_text}")
         return "Error: Could not parse SLM response.", (False, False, False)
 
@@ -101,7 +99,7 @@ def interactive_mode(MODEL):
     """Run the system in interactive mode accepting user commands."""
     print("\n" + "="*60)
     print("IoT Environmental Monitoring System - Interactive Mode")
-    print(f"Using Model: {MODEL} (Pydantic Optimized)")
+    print(f"Using Model: {MODEL} (Optimized)")
     print("="*60)
     print("\nCommands you can try:")
     print("  - What's the current temperature?")
@@ -164,11 +162,11 @@ def interactive_mode(MODEL):
             "content": user_message_content
         })
         
-        # Get SLM response using chat API with structured output
+        # Get SLM response using chat API
         print("Assistant: [Thinking...]")
         response = slm_inference(messages, MODEL)
         
-        # Parse response using Pydantic (guaranteed valid)
+        # Parse response
         assistant_content = response['message']['content']
         message, (red, yellow, green) = parse_interactive_response(assistant_content)
         
@@ -197,7 +195,7 @@ def interactive_mode(MODEL):
 
 
 if __name__ == "__main__":
-    MODEL = 'llama3.2:3b'  # Same model, Pydantic optimized
+    MODEL = 'llama3.2:3b'  # Same model, optimized usage
     
     # Run in interactive mode
     interactive_mode(MODEL)
