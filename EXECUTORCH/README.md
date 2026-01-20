@@ -114,7 +114,7 @@ rpicam-hello --list-cameras
 
 Now, let's create a test script to verify everything works:
 
-**camera_capture.py:**
+[camera_capture.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/scripts/camera_capture.py)
 
 ```python
 import numpy as np
@@ -410,7 +410,7 @@ Now, let's create a test program where we should take into consideration:
 5. **Softmax** - Converts raw outputs to probabilities 
 6. **Top-5** - Shows the 5 most likely classes
 
-and save it as `img_class_test_torch.py`:
+and save it as [img_class_test_torch.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/scripts/img_class_test_torch.py):
 
 ```python
 import torch
@@ -568,7 +568,7 @@ PyTorch Model (.pt/.pth)
 
 ### Exporting MobileNet V2 to ExecuTorch
 
-Let's export a MobileNet V2 model to EXECUTORCH basic format. Creating a Python script as: `convert_mobv2_executorch.py`
+Let's export a MobileNet V2 model to EXECUTORCH basic format. Creating a Python script as [convert_mobv2_executorch.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/scripts/convert_mobv2_executorch.py)
 
 ```python
 import torch
@@ -654,7 +654,7 @@ Reduction:        0.2%
 
 The basic ExecuTorch conversion doesn't compress the model much - it's mainly for runtime efficiency. To get **real size reduction**, we need **quantization**, which we will explore later. But first, let's do an inference test using the converted model. 
 
-Runing the script (`mobv2_executorch.py`):
+Runing the script [mobv2_executorch.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/scripts/mobv2_executorch.py):
 
 ```python
 import torch
@@ -753,7 +753,7 @@ ExecuTorch is designed to shine when delegated to a backend (XNNPACK, OpenVINO, 
 
 So, let's export the .pth model again with a CPU‑optimized backend (e.g., XNNPACK) and run with that backend enabled; this alone should reduce latency when compared with the naïve interpreter path.
 
-Here's the corrected conversion script with XNNPACK delegation (`convert_mobv2_xnnpack.py`:
+Here's the corrected conversion script with XNNPACK delegation ([convert_mobv2_xnnpack.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/scripts/convert_mobv2_xnnpack.py)):
 
 ```python
 import torch
@@ -896,7 +896,7 @@ For the conversion, we need: (1) calibrate with real, preprocessed images, and (
 
 First, let us create a small `calib_images/` folder (e.g., 50–100 natural images across a few classes). A simple way is to reuse an existing dataset (e.g., CIFAR‑10) and save 50–100 images into `calib_images/` with an ImageNet‑style folder layout.
 
-The script (`gen_calibr_images.py`) will:
+The script [gen_calibr_images.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/scripts/gen_calibr_images.py) will:
 	•	Download CIFAR‑10.
 	•	Pick 10 classes × 10 images each = 100 images.
 	•	Save them under `calib_images/<class_name>/img_XXX.jpg`.
@@ -959,7 +959,7 @@ for cls_name, n in counts.items():
 print(f"\nRoot folder: {OUT_ROOT.resolve()}")
 ```
 
-Let's use the inference script (`convert_mobv2_xnnpack_int8.py`), which is the same inference script as before, with this new int8 converted model to inspect the latency:
+Let's use the inference script [convert_mobv2_xnnpack_int8.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/scripts/convert_mobv2_xnnpack_int8.py), which is the same inference script as before, with this new int8 converted model to inspect the latency:
 
 ```python
 import os
@@ -1072,7 +1072,7 @@ Savings:                          10.01 MB
 ============================================================
 ```
 
-The quantized (int8) model achieved 74% size reduction: ~3.5 MB (similar to TFLite). Let's see about the inference latency, runing `mobv2_xnnpack_int8.py`. 
+The quantized (int8) model achieved 74% size reduction: ~3.5 MB (similar to TFLite). Let's see about the inference latency, runing [mobv2_xnnpack_int8.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/scripts/mobv2_xnnpack_int8.py). 
 
 ```bash
 Loading labels...
@@ -1657,7 +1657,7 @@ Documents/
        ├── camera_capture.jpg
 ```
 
-There we will run the script (`camera_capture.py`):
+There we will run the script [camera_capture.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/scripts/camera_capture.py)):
 
 ```python
 import numpy as np
@@ -1888,13 +1888,13 @@ EXECUTORCH/CIFAR-10/
 
 Let's train a model from scratch on CIFAR-10. For that, we can run the Notebook below on Google Colab:
 
-`cifar10_colab_training.ipynb`
+[cifar10_colab_training.ipynb](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/notebooks/cifar10_colab_training.ipynb)
 
 From the training, we will have the trained model:
 
 `cifar10_model_jit.pt`, which should be saved on `/models` folder
 
-Next, as we did before, we should export the PyTorch model to ExecuTorch, and let's use XNNPACK. Run the script: `export_cifar10_xnnpack.py`, as a result, we have:
+Next, as we did before, we should export the PyTorch model to ExecuTorch, and let's use XNNPACK. Run the script: [export_cifar10_xnnpack.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/notebooks/cifar10_colab_training.ipynb), as a result, we have:
 
 ![](./images/png/cifar-10-export.png)
 
@@ -1902,7 +1902,7 @@ Runing it, a converted model `cifar10_xnnpack.pte` will be saved in `./models/` 
 
 ### Running Custom Models on Raspberry Pi
 
-Runing the script `inference_cifar10_xnnpack.py`, over the "cat" image, we can see that the converted model is working fine:
+Runing the script [inference_cifar10_xnnpack.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/scripts/inference_cifar10_xnnpack.py), over the "cat" image, we can see that the converted model is working fine:
 
 `python inference_cifar10_xnnpack.py ./images/cat.jpg`
 
@@ -2036,5 +2036,5 @@ On Raspberry Pi 4/5, you can expect:
     
     ---
     
-    *"Democratizing Edge AI education, **Knowledge should be accessible to everyone, everywhere.***"
+    *"Democratizing Edge AI education: **Knowledge should be accessible to everyone, everywhere.***"
 
