@@ -10,13 +10,13 @@
 
 Image classification is a fundamental computer vision task that powers countless real-world applications—from quality control in manufacturing to wildlife monitoring, medical diagnostics, and smart home devices. In the edge AI landscape, the ability to run these models efficiently on resource-constrained devices has become increasingly critical for privacy-preserving, low-latency applications.
 
-In our [previous tutorial](https://mjrovai.github.io/EdgeML_Made_Ease_ebook/raspi/image_classification/image_classification_fund.html), we explored image classification using **TensorFlow Lite**, demonstrating how to deploy efficient neural networks on the Raspberry Pi. That tutorial covered the complete workflow from model conversion to real-time camera inference, achieving excellent results with the MobileNet V2 architecture.
+In the chapter [Image Classification Fundamentals](https://mjrovai.github.io/EdgeML_Made_Ease_ebook/raspi/image_classification/image_classification_fund.html), we explored image classification using **TensorFlow Lite**, demonstrating how to deploy efficient neural networks on the Raspberry Pi. That tutorial covered the complete workflow from model conversion to real-time camera inference, achieving excellent results with the **MobileNet V2** architecture and a real dataset (CIFAR-10).
 
-This chapter takes a parallel approach using [**PyTorch EXECUTORCH**](https://docs.pytorch.org/executorch/stable/index.html)—Meta's modern solution for edge deployment. Rather than replacing our TFLite knowledge, this tutorial expands your edge AI toolkit, giving you the flexibility to choose the right framework for your specific needs. Whether you're already working in the PyTorch ecosystem or exploring alternatives to TensorFlow, this hands-on guide will equip you with practical EXECUTORCH deployment skills.
+This chapter takes a parallel approach using [**PyTorch EXECUTORCH**](https://docs.pytorch.org/executorch/stable/index.html)—Meta's modern solution for edge deployment. Rather than replacing our TFLite knowledge, this chapter expands your edge AI toolkit, giving us the flexibility to choose the right framework for our specific needs.
 
 ### What is EXECUTORCH?
 
-EXECUTORCH is PyTorch's official solution for deploying machine learning models on edge devices, from smartphones and embedded systems to microcontrollers and IoT devices. Released in 2023, it represents Meta's commitment to bringing the entire PyTorch ecosystem to the edge computing domain.
+EXECUTORCH is PyTorch's official solution for deploying machine learning models on edge devices, from smartphones and embedded systems to microcontrollers and IoT devices. Released in 2023, it represents Meta's commitment to bringing the entire PyTorch ecosystem to edge computing.
 
 **Core Capabilities:**
 
@@ -31,7 +31,7 @@ EXECUTORCH is PyTorch's official solution for deploying machine learning models 
 EXECUTORCH offers compelling advantages for edge deployment:
 
 **1. Unified Workflow**
-If you're training models in PyTorch, EXECUTORCH provides a natural deployment path without framework switching. This eliminates conversion errors and maintains model fidelity from training to deployment.
+If we are training models in PyTorch, EXECUTORCH provides a natural deployment path without framework switching. This eliminates conversion errors and maintains model fidelity from training to deployment.
 
 **2. Modern Architecture**
 Built from the ground up for edge computing with contemporary best practices, EXECUTORCH incorporates lessons learned from previous mobile deployment frameworks.
@@ -65,34 +65,16 @@ Understanding when to choose each framework is crucial for effective edge deploy
 | **Documentation**        | Growing, modern                        | Comprehensive, mature           |
 | **Industry Adoption**    | Increasing in research                 | Widespread in production        |
 
-**When to choose EXECUTORCH:**
-
-- Your models are trained in PyTorch
-- You want the latest edge AI technology with modern architecture
-- You need tight integration with PyTorch tooling and ecosystem
-- You're starting new projects and want future-proof technology
-- Your team has PyTorch expertise
-- You value unified training-to-deployment workflows
-
-**When to choose TensorFlow Lite:**
-
-- Your models are trained in TensorFlow or Keras
-- You need maximum hardware support and mature production tools
-- You're maintaining existing TFLite projects
-- You require extensive community resources and support
-- You need proven stability in large-scale deployments
-- Your target platform has excellent TFLite optimization
-
 **The Reality: Both Are Excellent Choices**
 
-In practice, both frameworks achieve similar goals with different philosophies. Your choice often comes down to:
+In practice, both frameworks achieve similar goals with different philosophies. Our choice often comes down to:
 
-1. Your training framework preference
+1. Our training framework preference
 2. Team expertise and existing infrastructure
 3. Specific hardware requirements
 4. Project timeline and maturity needs
 
-This tutorial demonstrates that transitioning between frameworks is straightforward, allowing you to make informed decisions based on project needs rather than framework limitations.
+This chapter demonstrates that transitioning between frameworks is straightforward, allowing us to make informed decisions based on project needs rather than framework limitations.
 
 ---
 
@@ -173,13 +155,15 @@ First, let's confirm the System Python version:
 python --version
 ```
 
-Once we are using the latest Raspberry Pi OS, it should be:
+If we use the latest Raspberry Pi OS (based on Debian Trixie), it should be:
 
 `3.13.5`
 
-ExecuTorch officially supports **Python 3.10-3.12**, and Python 3.13.5 is too new and will likely cause compatibility issues. Since **Debian Trixie ships with Python 3.13** by default, we'll need to install a compatible Python version alongside it. 
+As of today (January 2026), ExecuTorch officially supports only **Python 3.10 to 3.12**; Python 3.13.5 is too new and will likely cause compatibility issues. Since **Debian Trixie ships with Python 3.13** by default, we'll need to install a compatible Python version alongside it. 
 
 One solution is to install [Pyenv](https://github.com/pyenv/pyenv), so that we can easily manage multiple Python versions for different projects without affecting the system Python.
+
+> If the Raspberry Pi OS is the legacy, the Python version should be 3.11, and it is not necesary to install Pyenv.
 
 #### Install pyenv Dependencies
 
@@ -286,7 +270,7 @@ Verify installation:
 pip list | grep -E "(numpy|pillow|opencv)"
 ```
 
-![](./images /versions.png)
+![](./images/png/versions.png)
 
 ## PyTorch and EXECUTORCH Installation
 
@@ -301,7 +285,7 @@ For **Raspberry Pi 4/5 (aarch64)**:
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 ```
 
-> For **Raspberry Pi Zero 2 W** (32-bit ARM), you may need to build from source or use lighter alternatives. We recommend using Raspberry Pi 4 or 5.
+> For the **Raspberry Pi Zero 2 W** (32-bit ARM), we may need to build from source or use lighter alternatives, which are not covered here. 
 
 Verify PyTorch installation:
 
@@ -321,7 +305,7 @@ pip install executorch
 
 **Building from Source (Optional - for latest features):**
 
-If you want the absolute latest features or need to customize:
+If we want the absolute latest features or need to customize:
 
 ```bash
 # Clone the repository
@@ -394,7 +378,7 @@ Created test PIL image: (224, 224)
 
 ## Image Classification using MobileNet V2
 
-### Create your working directory:
+### Working directory:
 
 ```bash
 cd Documents
@@ -584,7 +568,7 @@ PyTorch Model (.pt/.pth)
 
 ### Exporting MobileNet V2 to ExecuTorch
 
-Let's export a MobileNet V2 model to EXECUTORCH format. Creating a Python script as: `convert_mobv2_executorch.py`
+Let's export a MobileNet V2 model to EXECUTORCH basic format. Creating a Python script as: `convert_mobv2_executorch.py`
 
 ```python
 import torch
@@ -848,7 +832,7 @@ ExecuTorch+XNNPACK:      13.35 MB
 ==================================================
 ```
 
-We did not a gain in terms of size, but let's run the same inference script as before, with this new converted model to inspect the latency:
+We did not gain in terms of size, but let's run the same inference script as before, with this new converted model, to inspect the latency:
 
 the result:
 
@@ -884,7 +868,7 @@ Now, the ExecuTorch runtime detects the backend automatically from the .pte file
 
 **This demonstrates:**
 
-1. ExecuTorch without a backend = **don't use in production**
+1. ExecuTorch (basic)  without a backend = **don't use in production**
 2. ExecuTorch + XNNPACK = **production-ready edge AI**
 3. Raspberry Pi 5 can do **50+ inferences/second** at this speed!
 
@@ -1189,7 +1173,7 @@ EXECUTORCH/MOBILENET/
 
 ### Loading and Running a Model
 
-Inside the folder 'notebooks'. on the project space `IMAGE_CLASS/MOBILENET`, create a new notebook: `image_classification_executorch.ipynb`
+Inside the folder 'notebooks', on the project space `IMAGE_CLASS/MOBILENET`, create a new notebook: [image_classification_executorch.ipynb](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/EXECUTORCH/notebooks/image_classification_executorch.ipynb).
 
 ### Setup and Verification
 
@@ -1284,16 +1268,14 @@ print(f"Image mode: {img.mode}")
 >  - `python export_mobv2_executorch.py`
 >
 
-
-```python
-ls ../models
-```
+Let's verify what the models in the folder `../models`:
 
     imagenet_labels.json  mobilenet_v2_quantized_xnnpack.pte
     mobilenet_v2.pte      mobilenet_v2_xnnpack.pte
     mobilenet_v2.pth
 
-
+> The conversions were performed using the Python scripts in the previous sections. 
+>
 
 ```python
 # Load the EXECUTORCH model
@@ -1858,7 +1840,7 @@ benchmark_times = benchmark_inference(
 )
 ```
 
-![](./images /bench3.png)
+![](./images/png/bench3.png)
 
 ### Performance Comparison Table
 
@@ -1990,8 +1972,14 @@ On Raspberry Pi 4/5, you can expect:
 
     ## Resources
 
-    ### Official Documentation
+    ### Code Repository
 
+    - [Tutorial Code Repository](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/tree/main/EXECUTORCH)
+    - [Model Export and Inference Scripts](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/tree/main/EXECUTORCH/scripts)
+    - [Notebooks](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/tree/main/EXECUTORCH/notebooks)
+    
+    ### Official Documentation
+    
     **PyTorch & EXECUTORCH:**
 
     - [PyTorch Official Website](https://pytorch.org/)
@@ -1999,56 +1987,29 @@ On Raspberry Pi 4/5, you can expect:
     - [EXECUTORCH GitHub Repository](https://github.com/pytorch/executorch)
     - [PyTorch Mobile](https://pytorch.org/mobile/)
     - [Deep Learning with PyTorch: A 60 Minute Blitz](https://docs.pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html)
-
+    
     **Quantization:**
-
+    
     - [PyTorch Quantization](https://pytorch.org/docs/stable/quantization.html)
     - [Quantization API Tutorial](https://pytorch.org/tutorials/advanced/static_quantization_tutorial.html)
 
     **Models:**
 
-    - [PyTorch Model Zoo](https://pytorch.org/vision/stable/models.html)
     - [Torchvision Models](https://pytorch.org/vision/stable/models.html)
     - [Pretrained Model Deployment Guide](https://pytorch.org/executorch/stable/tutorials/export-to-executorch-tutorial.html)
-
-    ### Community & Support
-
-    - [PyTorch Forums](https://discuss.pytorch.org/)
-    - [EXECUTORCH Discussions](https://github.com/pytorch/executorch/discussions)
-    - [PyTorch Slack Community](https://pytorch.slack.com/)
-    - [r/PyTorch on Reddit](https://reddit.com/r/PyTorch)
-
-    ### Code Repository
-
-    - [Tutorial Code Repository](https://github.com/mjrovai/UNIFEI-IESTI01-TinyML-2025.1/tree/main/RaspberryPi)
-    - [Model Export Scripts](https://github.com/mjrovai/UNIFEI-IESTI01-TinyML-2025.1/tree/main/RaspberryPi)
-    - [Deployment Examples](https://github.com/mjrovai/UNIFEI-IESTI01-TinyML-2025.1)
-
-    ### Comparison Studies
-
-    - [TFLite Image Classification Tutorial (companion)](https://mjrovai.github.io/EdgeML_Made_Ease_ebook/raspi/image_classification/image_classification_fund.html)
-    - [Edge AI Framework Benchmarks](https://arxiv.org/search/?query=edge+ai+frameworks)
-    - [Mobile ML Performance Analysis](https://pytorch.org/blog/)
-
-    ### Related Tutorials (EdgeAI Foundation)
-
-    - [TensorFlow Lite Image Classification](https://mjrovai.github.io/EdgeML_Made_Ease_ebook/raspi/image_classification/image_classification_fund.html)
-    - [Object Detection with EXECUTORCH](coming-soon)
-    - [Audio Classification on Edge Devices](https://mlsysbook.ai/)
-    - [Custom Model Training for Edge](https://mlsysbook.ai/)
-
+    
     ### Hardware Resources
 
     - [Raspberry Pi Official Documentation](https://www.raspberrypi.com/documentation/)
     - [Picamera2 Library](https://github.com/raspberrypi/picamera2)
     - [ARM Architecture Optimization](https://developer.arm.com/)
-
+    
     ### Books
 
     - [**Edge AI Engineering e-book**](https://mjrovai.github.io/EdgeML_Made_Ease_ebook/)- by Prof. Marcelo Rovai, UNIFEI
     - [**Machine Learning Systems**](https://mlsysbook.ai/book/) - by Prof. Vijay Janapa Reddi, Harvard University
     - [**AI and ML for Coders in PyTorch**](https://learning.oreilly.com/library/view/ai-and-ml/9781098199166/) by Laurence Moroney
-
+    
     ---
 
     **Tutorial Credits**
@@ -2056,24 +2017,24 @@ On Raspberry Pi 4/5, you can expect:
     **Author:** Prof. Marcelo Rovai  
     **Affiliation:** Federal University of Itajubá (UNIFEI), Brazil  
     **Role:** Co-Chair, TinyML4D Academic Network and EAIP (Edge AI Foundation Industry Academia Partnership)
-
+    
     **License:** Open-source educational material  
-    **Repository:** https://github.com/mjrovai/UNIFEI-IESTI01-TinyML-2025.1
+    **Repository:** https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/tree/main/EXECUTORCH
 
     ---
-
+    
     **Acknowledgments**
 
     - Meta AI and the PyTorch team for developing EXECUTORCH
     - The Raspberry Pi Foundation for excellent hardware and documentation
-    - The TinyML community for continuous inspiration and support
+    - The TinyML and EdgeAI community for continuous inspiration and support
     - UNIFEI students for feedback and testing
-
+    
     **Version:** 1.0  
     **Last Updated:** January 2025  
     **Contact:** [mjrovai@gmail.com](mailto:mjrovai@gmail.com)
-
+    
     ---
-
+    
     *"Democratizing Edge AI education, **Knowledge should be accessible to everyone, everywhere.***"
 
