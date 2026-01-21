@@ -5,7 +5,7 @@ import threading
 import time
 import numpy as np
 from PIL import Image
-import tflite_runtime.interpreter as tflite
+from ai_edge_litert.interpreter import Interpreter
 from queue import Queue
 
 app = Flask(__name__)
@@ -49,7 +49,7 @@ def generate_frames():
 def load_model():
     global interpreter
     if interpreter is None:
-        interpreter = tflite.Interpreter(model_path=model_path)
+        interpreter = Interpreter(model_path=model_path)
         interpreter.allocate_tensors()
     return interpreter
 
