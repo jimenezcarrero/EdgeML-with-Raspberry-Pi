@@ -10,7 +10,7 @@
 
 Image classification is a fundamental computer vision task that powers countless real-world applications—from quality control in manufacturing to wildlife monitoring, medical diagnostics, and smart home devices. In the edge AI landscape, the ability to run these models efficiently on resource-constrained devices has become increasingly critical for privacy-preserving, low-latency applications.
 
-In the chapter [Image Classification Fundamentals](https://mjrovai.github.io/EdgeML_Made_Ease_ebook/raspi/image_classification/image_classification_fund.html), we explored image classification using **TensorFlow Lite**, demonstrating how to deploy efficient neural networks on the Raspberry Pi. That tutorial covered the complete workflow from model conversion to real-time camera inference, achieving excellent results with the **MobileNet V2** architecture and a real dataset (CIFAR-10).
+In the chapter [Image Classification Fundamentals](https://mjrovai.github.io/EdgeML_Made_Ease_ebook/raspi/image_classification/image_classification_fund.html), we explored image classification with **TensorFlow Lite** and demonstrated how to deploy efficient neural networks on the Raspberry Pi. That tutorial covered the complete workflow from model conversion to real-time camera inference, achieving excellent results with the **MobileNet V2** architecture and a real dataset (CIFAR-10).
 
 This chapter takes a parallel approach using [**PyTorch EXECUTORCH**](https://docs.pytorch.org/executorch/stable/index.html)—Meta's modern solution for edge deployment. Rather than replacing our TFLite knowledge, this chapter expands your edge AI toolkit, giving us the flexibility to choose the right framework for our specific needs.
 
@@ -90,7 +90,7 @@ sudo apt upgrade -y
 sudo reboot  # Reboot to ensure all updates take effect
 ```
 
-### Installing Required System Level Libraries
+### Installing Required System-Level Libraries
 
 Install Python tools, camera libraries, and build dependencies for PyTorch:
 
@@ -110,7 +110,7 @@ rpicam-hello --list-cameras
 
 ![](./images/png/cam-setup.png)
 
-> We should see that we have the OV5647 cam installed. 
+> We should see that the OV5647 cam is installed. 
 
 Now, let's create a test script to verify everything works:
 
@@ -163,7 +163,7 @@ As of today (January 2026), ExecuTorch officially supports only **Python 3.10 to
 
 One solution is to install [Pyenv](https://github.com/pyenv/pyenv), so that we can easily manage multiple Python versions for different projects without affecting the system Python.
 
-> If the Raspberry Pi OS is the legacy, the Python version should be 3.11, and it is not necesary to install Pyenv.
+> If the Raspberry Pi OS is the legacy, the Python version should be 3.11, and it is not necessary to install Pyenv.
 
 #### Install pyenv Dependencies
 
@@ -882,7 +882,7 @@ Quantization reduces model size and can further improve inference speed. EXECUTO
 
 Quantization is a technique that reduces the precision of numbers used in a model’s computations and stored weights—typically from 32-bit floats to 8-bit integers. This reduces the model’s memory footprint, speeds up inference, and lowers power consumption, often with minimal loss in accuracy.
 
-Quantization is especially important for deploying models on edge devices such as wearables, embedded systems, and microcontrollers, which often have limited compute, memory, and battery capacity. By quantizing models, we can make them significantly more efficient and suitable for these resource-constrained environments.
+Quantization is especially important for deploying models on edge devices such as wearables, embedded systems, and microcontrollers, which often have limited compute, memory, and battery capacity. By quantizing models, we can make them significantly more efficient and better suited to these resource-constrained environments.
 
 **Quantization in ExecuTorch**
 
@@ -1418,7 +1418,7 @@ print(f"Output shape: {outputs[0].shape}")
     Output shape: torch.Size([1, 1000])
 
 
-`type(outputs)` tells us what container the model returned. Often this is a tuple or list when working with exported/ExecuTorch‑style models, e.g. `<class 'tuple'>`.
+`type(outputs)` tells us what container the model returned. Often this is a tuple or list when working with exported/ExecuTorch‑style models, e.g., `<class 'tuple'>`.
 
 That container may hold one or more tensors (e.g., logits, auxiliary outputs). 
 
@@ -1635,7 +1635,7 @@ We essentially have two different Python worlds: system Python 3.13 (where the c
 >
 > - Recent Raspberry Pi OS uses Picamera2 on top of libcamera as the recommended interface.
 > - The Picamera2/libcamera Python bindings are usually installed into the system Python and are not trivially pip‑installable into arbitrary venvs or other Python versions.
-> - Once we create a separate 3.11 environment, it will not automatically see the Picamera2/libcamera bindings that live under 3.13, so imports fail, or the camera device is not accessible from that environment.
+> - Once we create a separate 3.11 environment, it will not automatically see the Picamera2/libcamera bindings under 3.13, so imports fail or the camera device is not accessible from that environment.
 >
 
 We will use a `two‑process solution`: capture in 3.13, infer in 3.11. For that, we should run a small capture service under Python 3.13 that:
@@ -1719,7 +1719,7 @@ inf_time, indices, probs = classify_image_executorch(
 
 ## Performance Benchmarking
 
-Let's now define a function to run the inference several times for each one of the models to compare their performance. 
+Let's now define a function to run inference several times for each model and compare their performance. 
 
 
 ```python
@@ -1854,10 +1854,10 @@ Based on actual benchmarking results on Raspberry Pi 5:
 
 **Key Observations:**
 
-1. **XNNPACK Impact**: Backend delegation provides ~3.8× speedup even without quantization
-2. **Quantization Benefit**: INT8 quantization adds ~30% additional speedup beyond XNNPACK
+1. **XNNPACK Impact**: Backend delegation provides an important speedup even without quantization
+2. **Quantization Benefit**: INT8 quantization, besides size reduction, adds additional speedup beyond XNNPACK
 3. **Variability**: Quantized model shows lower standard deviation, indicating more stable performance
-4. **Size-Speed Tradeoff**: 75% size reduction (14MB → 3.5MB) with 5× speed improvement
+4. **Size-Speed Tradeoff**: 75% size reduction (14MB → 3.5MB) with 3× speed improvement
 
 ## Exploring Custom Models
 
@@ -1912,7 +1912,7 @@ And runing 20 times....
 
 ![](./images/png/cifar-10-benchmark.png)
 
-Despite the fact that the exported model is OK, if we make an inference with the original PyTorch model, in this particular case (a small model), we will find even lower latencies. 
+Despite the exported model being OK, when we make an inference with the original PyTorch model, in this case (a small model), we will find even lower latencies. 
 
 ![](./images/png/performance_comparison.png)
 
