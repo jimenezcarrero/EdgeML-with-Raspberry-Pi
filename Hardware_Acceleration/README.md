@@ -684,7 +684,7 @@ mxa_latency = time.time() - start
 print(f"\nMXA latency: {mxa_latency*1000:.2f} ms")
 ```
 
-Run the complete script in the terminal:
+Run the complete script [run_inference_comp_mobilenetv2.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/Hardware_Acceleration/run_inference_comp_mobilenetv2.py) in the terminal:
 
 ```bash
 python run_inference_comp_mobilenetv2.py
@@ -709,9 +709,10 @@ python3 -c "import tensorflow as tf; tf.keras.applications.ResNet50().save('resn
 # Compile
 mx_nc -v -m resnet50.h5
 
-# Run inference comparison
+# Run the complete script [run_inference_comp_resne50.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/Hardware_Acceleration/run_inference_comp_resnet50.py) in the terminal:
 python run_inference_comp_resnet50.py
 ```
+Run the complete script [run_inference_comp_mobilenetv2](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/Hardware_Acceleration/run_inference_comp_mobilenetv2.py) in the terminal:
 
 ![](./images/png/run_cpu_mxa_resnet.png)
 
