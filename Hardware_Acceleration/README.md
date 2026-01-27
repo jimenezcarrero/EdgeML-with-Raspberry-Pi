@@ -735,8 +735,8 @@ sudo shutdown -h now
 
 ```bash
 Documents/MEMRYX/
-├── run_inference_mobilenetv2.py          # MobileNetV2 script
-├── run_inference_resnet50.py             # ResNet50 script
+├── run_inference_comp_mobilenetv2.py          # MobileNetV2 script
+├── run_inference_comp_resnet50.py             # ResNet50 script
 ├── images/
 │   ├── cat.jpg                           # Test image
 ├── models/
