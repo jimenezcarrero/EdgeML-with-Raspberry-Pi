@@ -709,10 +709,10 @@ python3 -c "import tensorflow as tf; tf.keras.applications.ResNet50().save('resn
 # Compile
 mx_nc -v -m resnet50.h5
 
-# Run the complete script [run_inference_comp_resne50.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/Hardware_Acceleration/run_inference_comp_resnet50.py) in the terminal:
+# Run the script in the terminal:
 python run_inference_comp_resnet50.py
 ```
-Run the complete script [run_inference_comp_mobilenetv2](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/Hardware_Acceleration/run_inference_comp_mobilenetv2.py) in the terminal:
+> The  script can be found in the lab repo: [run_inference_comp_resnet50.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/Hardware_Acceleration/run_inference_comp_resnet50.py) in the terminal:
 
 ![](./images/png/run_cpu_mxa_resnet.png)
 
@@ -1035,16 +1035,18 @@ As edge AI continues to evolve, hardware acceleration will become increasingly i
 4. [Supported Operators](https://developer.memryx.com/specs/supported_ops.html)
 
 ### Code and Examples
+
 5. [MemryX eXamples Repository](https://github.com/memryx/MemryX_eXamples)
 6. [MemryX GitHub Organization](https://github.com/MemryX)
 7. [Model eXplorer](https://developer.memryx.com/model_explorer/models.html)
+8. [Lab Code Repo](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/tree/main/Hardware_Acceleration) 
 
 ### Background Reading
-8. [MLSys Book - Hardware Acceleration](https://mlsysbook.ai/book/contents/core/hw_acceleration/hw_acceleration.html)
-9. [Raspberry Pi PCIe Documentation](https://www.raspberrypi.com/documentation/computers/raspberry-pi-5.html#pcie-gen-3-mode)
+9. [MLSys Book - Hardware Acceleration](https://mlsysbook.ai/book/contents/core/hw_acceleration/hw_acceleration.html)
+10. [Raspberry Pi PCIe Documentation](https://www.raspberrypi.com/documentation/computers/raspberry-pi-5.html#pcie-gen-3-mode)
 
 ### Community and Support
 
-10. [MemryX YouTube Channel](https://www.youtube.com/@MemryxInc)
-11. [MemryX Support Portal](https://developer.memryx.com/support/index.html)
+11. [MemryX YouTube Channel](https://www.youtube.com/@MemryxInc)
+12. [MemryX Support Portal](https://developer.memryx.com/support/index.html)
 
