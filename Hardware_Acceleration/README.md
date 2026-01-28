@@ -1,4 +1,4 @@
-# Beyond CPU - Hardware Acceleration for Edge AI
+# Beyond CPU - Hardware Acceleration for Edge AI {.unnumbered}
 
 ![](./images/png/portada.png)
 
@@ -50,18 +50,26 @@ For heatsink installation, follow the video instructions: https://youtu.be/wNmka
 
 ![](./images/png/montage.png)
 
+> IMPORTANT NOTE: MemryX recommends the [GeeekPi N04 M.2 2280 HAT](https://www.amazon.com/GeeekPi-NVMe-Adapter-Raspberry-Support/dp/B0CRK4YB4C) as an excellent choice for the Raspberry Pi 5. It delivers solid power and fits the 2280 MX3 M.2 form factor. A dual Hat as I used can lead to instabilities, mainly due to PCIe speed (Gen3).  The Raspberry Pi 5 can have stability issues on Gen3.  
+
+Alternatively, the [Raspberry Pi M.2 HAT+](https://www.amazon.com/dp/B0D5CGDJLQ?tag=consecho57301-20&linkCode=osi&th=1&psc=1&ascsubtag=NoCID|da83d918-3f4e-415e-ad00-b1791332db69) is also an option. It works very well, despite the fact that we should adapt the MX3 board to it (The MX3 is longer than the hat).
+
+![](./images/png/raspi-hat.png)
+
 ### Installation and Cooling Considerations
 
-The Seeed PCIe 2.0 to dual M.2 adapter can be installed under the Raspberry Pi. With this configuration, we will not interrupt the active fan airflow. It is essential to ensure we have sufficient cooling for the MemryX MX3 M.2 module, or we may experience thermal throttling and reduced performance. **The chips will throttle their performance if they hit 100 °C**.
-
-> During operation, I have kept the Raspberry Pi positioned sideways with plenty of air circulation around the MemryX module.
-
-![](./images/png/position.png)
+ It is essential to ensure we have sufficient cooling for the MemryX MX3 M.2 module, or we may experience thermal throttling and reduced performance. **The chips will throttle their performance if they hit 100 °C**.
 
 During normal operation, the current MemryX MX3 temperature and throttle status can be viewed at any time with:
 
 ```bash
 cat /sys/memx0/temperature
+```
+
+Or measurd continuay every 1 second, for example with the command:
+
+```bash
+watch -n 1 cat /sys/memx0/temperature
 ```
 
 ### Verification
@@ -81,8 +89,6 @@ Let's also check the initial temperature:
 ![](./images/png/temp.png)
 
 > The lab temperature at the time of the above measurement was 25 °C. 
-
-**Regarding Power Consumption**: The Raspberry Pi 5 with the MX3 module idle drains around 1.4A (~7W). Under load, this increases to approximately 2.4A (~12W).
 
 ## Software Installation
 
@@ -286,8 +292,8 @@ Working with the MemryX MX3 follows a straightforward four-step workflow that di
 Start with a pre-trained model or train your own. MemryX supports models from major frameworks:
 
 - **TensorFlow/Keras** (.h5, SavedModel)
-- **PyTorch** (.pt, .pth) (Should be converted to ONNS first)
 - **ONNX** (.onnx) 
+- **PyTorch** (.pt, .pth) (Should be converted to ONNX first)
 - **TensorFlow Lite** (.tflite)
 
 The model remains in its original format—no framework-specific conversions needed yet. For this lab, we're using MobileNetV2 from Keras Applications, but we could equally use a custom model we have trained for a specific task, as we have seen before.
@@ -757,7 +763,7 @@ Here's how the MX3 compares across different deployment approaches we've covered
 |----------|----------|---------------------|------------------|----------------|
 | TFLite (CPU) | Raspberry Pi 5 | ~150-200 ms | ~600-800 ms | ~ |
 | ExecuTorch/XNNPACK | Raspberry Pi 5 | ~20 ms | ~80-100 ms | ~ |
-| **MemryX MX3** | **Dedicated accelerator** | **~13 ms** | **~35 ms** | **~12W** |
+| **MemryX MX3** | **Dedicated accelerator** | **~13 ms** | **~35 ms** | **~** |
 
 ### Key Observations
 
@@ -765,7 +771,7 @@ Here's how the MX3 compares across different deployment approaches we've covered
 - **1.5x faster** than highly optimized ExecuTorch with XNNPACK
 - **Minimal CPU load**: The host CPU is free for preprocessing, postprocessing, and application logic
 - **Consistent latency**: Hardware acceleration provides deterministic performance
-- **Power efficiency**: Only 5W additional power for dramatically improved throughput
+- **Power efficiency**: Not measured
 
 ### When to Use the MX3?
 
@@ -783,6 +789,524 @@ The MX3 may be overkill for:
 - ❌ Non-latency-critical batch processing
 - ❌ Prototyping where development speed matters more than performance
 - ❌ Very cost-sensitive applications
+
+Perfect! You have a clean, working script. Let me help you create a comprehensive tutorial structure for YOLOv8 inference with MX3 hardware acceleration. Here's what I suggest:
+
+## YOLOv8 Object Detection with MX3 Hardware Acceleration
+
+In this part of the lab, we'll deploy YOLOv8n (nano) for real-time object detection using the MemryX MX3 AI accelerator on Raspberry Pi 5. We'll cover the complete workflow from model export to inference optimization.
+
+![](./images/png/flow-yolo.png)
+
+But first, we should install ULTRALYTICS
+
+The MemoryX team suggested:
+
+```bash
+pip install ultralytics==8.3.161
+```
+
+If you face issues, try it with:
+
+```bash
+pip install ultralytics[export]
+```
+
+If you still have issues, reinstall memryx
+
+```bash
+pip3 install --extra-index-url https://developer.memryx.com/pip memryx
+```
+
+Now,  download the YOLOv8.pt model and test it:
+
+```bash
+yolo predict model='yolov8n' source='https://ultralytics.com/images/bus.jpg'
+```
+
+The model and the image `bus.jpg` will be download and tested with the YOLOV8n:
+
+![](./images/png/yolov8n-test.png)
+
+> 4 persons, 1 bus, and one stop signal were detected in 522 ms. 
+
+Under `./runs/detect`, the output processed image can be analysed: 
+
+![](./images/png/yolov8-1st-infer.png)
+
+### Model Export and Compilation
+
+#### Step 1: Export YOLOv8 to ONNX
+
+YOLOv8 must be converted to ONNX format before compilation for the MX3:
+
+```python
+from ultralytics import YOLO
+
+#### Load pretrained YOLOv8n model
+model = YOLO('yolov8n.pt')
+
+#### Export to ONNX format
+model.export(format='onnx', simplify=True)
+```
+
+This creates `yolov8n.onnx` with the complete model graph.
+
+We can also use CLI for the conversion:
+
+```bash
+yolo export model=yolov8n.pt format=onnx
+```
+
+![](./images/png/yolo-onnx-conv.png)
+
+#### Step 2: Compile for MX3
+
+We can use the MemryX Neural Compiler to generate the DFP file:
+
+```bash
+mx_nc -v --autocrop -m yolov8n.onnx
+```
+
+**Key flags:**
+
+- `-v`: Verbose output for debugging
+- `-m`: Input model path
+- `--autocrop`: Automatically split model for optimal MX3 execution
+
+**Output files:**
+
+- `yolov8n.dfp` - Accelerator executable (runs on MX3 chips)
+- `yolov8n_post.onnx` - Post-processing model (runs on CPU)
+
+**Why Two Files?**
+
+The MX3 compiler splits the model:
+
+1. **Feature extraction** (yolov8n.dfp): Neural network backbone on MX3 hardware
+2. **Detection head** (yolov8n_post.onnx): Bounding box decoding on CPU
+
+This hybrid approach optimizes performance by running computationally intensive operations on the accelerator while keeping final post-processing flexible.
+
+![](./images/png/yolo-onnx-export.png)
+
+Now, let's check the model with a benchmark
+
+```bash
+mx_bench -d yolov8n.dfp -f 1000
+```
+
+![](./images/png/bench-yolov8.png)
+
+### Understanding YOLOv8 Output Format
+
+#### YOLOv8 Output Structure
+
+The post-processing model outputs predictions in shape `(1, 84, 8400)`:
+
+- **Dimension 0 (1)**: Batch size
+- **Dimension 1 (84)**: 
+  - First 4 values: Bounding box `[x_center, y_center, width, height]`
+  - Next 80 values: Class probabilities (COCO dataset)
+- **Dimension 2 (8400)**: Anchor points across three detection scales:
+  - 80×80 = 6400 points (small objects)
+  - 40×40 = 1600 points (medium objects)
+  - 20×20 = 400 points (large objects)
+
+#### Decoding Process
+
+1. **Transpose**: Convert from `(1, 84, 8400)` → `(8400, 84)`
+2. **Extract**: Separate boxes and class scores
+3. **Filter**: Keep predictions above confidence threshold
+4. **Convert coordinates**: Transform from `xywh` to `xyxy`
+5. **NMS**: Remove overlapping detections
+6. **Scale**: Map to original image coordinates
+
+### Complete Inference Pipeline
+
+We should now create a script to run an object detector (YOLOv8 with a pre/post-processing pipeline), print each detection (label, confidence, bounding box), and save a copy of the image with the boxes drawn.
+
+#### Configuration section
+
+At the top of `__main__` we define the configuration values:
+
+```python
+DFP_PATH = "./models/yolov8n.dfp"
+POST_MODEL_PATH = "./models/yolov8n_post.onnx"
+IMAGE_PATH = "./images/bus.jpg"
+CONF_THRESHOLD = 0.25
+```
+
+- `DFP_PATH`: path to the compiled model used for inference.  
+- `POST_MODEL_PATH`: path to a post-processing model or graph, usually converting raw outputs into boxes, scores, and class IDs.  
+- `IMAGE_PATH`: image file we want to run detection on.  
+- `CONF_THRESHOLD`: minimum confidence score; detections below this are filtered out.
+
+In a tutorial you can explain that changing these values lets the user swap models or images without modifying the rest of the code.
+
+#### Running detection
+
+```python
+detections, annotated_image, inference_time = detect_objects(
+    DFP_PATH,
+    POST_MODEL_PATH,
+    IMAGE_PATH,
+    CONF_THRESHOLD
+)
+```
+
+Here we call a helper function `detect_objects` that encapsulates the heavy lifting:
+
+- Loads the model(s).  
+- Loads and preprocesses the image.  
+- Runs inference.  
+- Applies post-processing (NMS, thresholding, etc.).  
+- Returns:
+  - `detections`: list/array where each element is `[x1, y1, x2, y2, conf, class_id]`.  
+  - `annotated_image`: a PIL image with bounding boxes and labels drawn.  
+  - `inference_time`: time spent doing the detection (in milliseconds).
+
+#### Printing results
+
+```python
+print(f"\n{'='*60}")
+print("Detection Results:")
+print(f"{'='*60}")
+for i, det in enumerate(detections):
+    x1, y1, x2, y2, conf, class_id = det
+    print(f"  {i+1}. {COCO_CLASSES[int(class_id)]}: {conf:.3f}")
+    print(f"      Box: [{int(x1)}, {int(y1)}, {int(x2)}, {int(y2)}]")
+```
+
+- The loop goes over each detection, unpacks the bounding box coordinates, confidence, and class ID.  
+- `COCO_CLASSES[int(class_id)]` converts the numeric class index into a human-readable label (e.g., “person”, “bus”).  
+- Coordinates are cast to `int` for cleaner printing.
+
+#### Saving the annotated image
+
+```python
+if len(detections) > 0:
+    output_path = IMAGE_PATH.rsplit('.', 1)[0] + '_detected.jpg'
+    annotated_image.save(output_path)
+    print(f"\nSaved: {output_path}")
+```
+
+- Only saves an output file if at least one object was detected.  
+- The output filename is built by taking the original name and appending `_detected` before the extension (e.g., `bus_detected.jpg`).  
+- `annotated_image.save(...)` writes the image with drawn boxes and labels to disk.
+
+#### Final summary output
+
+```python
+print(f"\n{'='*60}")
+print(f"Total: {len(detections)} objects")
+print(f"Time: {inference_time:.2f} ms")
+print(f"{'='*60}")
+```
+
+- Prints how many objects were found in total.  
+- Prints the inference time, which is useful to talk about performance (e.g., model size vs. speed, hardware differences).  
+
+Run the script [yolov8_m3_detect.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/Hardware_Acceleration/yolov8_mx3_detect.py)
+
+```bash
+python yolov8_m3_detect.py
+```
+
+As a result, we can see that the models found 4 persons and 1 bus, missing only the stop signal 
+
+> Basically, the same result that we got on the YOLO chapter running yolov11
+
+![](./images/png/infer-compar.png)
+
+### Going deeper in the functions
+
+#### 1. Image preprocessing (`preprocess_image`)
+
+`original image → resized → padded → tensor`
+
+- Load and normalize:
+  - Open the image with PIL, convert to RGB, and get its original size.
+  - Compute a scale `ratio` so the image fits into 640×640 without distortion (preserving aspect ratio).
+- Letterboxing:
+  - Resize the image to `(new_w, new_h) = (int(w * ratio), int(h * ratio))`.
+  - Paste it onto a 640×640 canvas filled with color `(114, 114, 114)` (same as Ultralytics).  
+  - Compute the padding offsets `(pad_w, pad_h)` so we can undo this later.
+- Tensor conversion:
+  - Convert to `numpy`, normalize to `[0,1]`, permute from HWC to CHW, and add a batch dimension to get shape `[1, 3, 640, 640]`, which matches YOLOv8’s expected input.[1][2]
+
+#### 2. Decoding YOLOv8 output (`decode_predictions`)
+
+*How to turn raw model numbers into human-readable detections.*
+
+**The raw output format:**
+
+- For COCO YOLOv8n ONNX, the detection head outputs a tensor of shape `(1, 84, 8400)`.
+- `84 = 4 (bbox) + 80 (class scores)`. Each of the 8400 positions corresponds to one candidate box.
+
+**Function Walkthrough:**
+
+- Transpose:
+  - From `(1, 84, 8400)` to `(8400, 84)` so each row is: `[x_center, y_center, width, height, class_0_score, ..., class_79_score]`.
+- Best class per box:
+  - Take `max_scores = np.max(class_scores, axis=1)` and `class_ids = np.argmax(class_scores, axis=1)` to select the most likely class and its score for each of the 8400 candidates.
+- Confidence filtering:
+  - Drop boxes whose max class score is below `conf_threshold`.
+- Coordinate conversion:
+  - Convert from YOLO’s center-format `(x, y, w, h)` to corner-format `(x1, y1, x2, y2)` to make drawing and IoU calculation simpler.
+- NMS:
+  - Call `apply_nms` to remove overlapping boxes and keep only the best ones.
+
+#### 3. IoU and NMS (`compute_iou_batch` and `apply_nms`)
+
+**IoU:**
+
+- IoU (Intersection over Union) measures overlap between two boxes:  
+  $$\text{IoU} = \frac{\text{area of intersection}}{\text{area of union}}$$
+- `compute_iou_batch` does this between one box and many boxes at once using vectorized Numpy operations.
+
+**NMS:**
+
+- `apply_nms`:
+  - Sort boxes by score descending.
+  - Repeatedly pick the highest-score box, compute its IoU with the remaining boxes, and discard those whose IoU is above `iou_threshold`.
+- The result is a list of indices for boxes that don’t overlap too much and represent unique objects.
+
+#### 4. Mapping back to the original image (`scale_boxes_to_original`)
+
+*Everything after the model must undo what preprocessing did.*
+
+- During preprocessing we:
+  - Rescaled the image by `ratio`.
+  - Padded by `(pad_w, pad_h)`.
+- The model’s boxes live in that padded, resized 640×640 space.
+- `scale_boxes_to_original`:
+  - Subtracts the padding.
+  - Divides by `ratio` to go back to the original resolution.
+  - Clips coordinates so they stay inside the original image bounds.
+
+#### 5. Drawing results (`draw_detections`)
+
+`model output → decoded boxes → drawn on the original image`
+
+- Make a copy of the original image and get an `ImageDraw` context.
+- For each detection:
+  - Choose a color deterministically using `np.random.seed(class_id)` so the same class always has the same color.
+  - Draw the rectangle `[x1, y1, x2, y2]`.
+  - Build a label string `"class_name: confidence"`, measure text size using `textbbox`, draw a filled rectangle for the label background, and render the text.
+
+#### 6. The Memryx pipeline (`detect_objects` and `AsyncAccl` usage)
+
+*How to integrate Memryx’s async accelerator into a typical vision pipeline*
+
+- Preprocess once: call `preprocess_image` to get the model-ready tensor and the info needed for rescaling.
+- Create the accelerator:
+  - `accl = AsyncAccl(dfp_path)` loads the compiled Memryx DFP model.
+  - `accl.set_postprocessing_model(post_model_path, model_idx=0)` attaches the ONNX post-processing graph.
+- Streaming-style design:
+  - `frame_queue` is a queue of inputs; you put your tensor in it.
+  - `generate_frame` is a generator feeding frames into the accelerator.
+  - `process_output` is a callback that collects outputs into `results`.
+  - The code wires them with `connect_input` and `connect_output`, then waits for completion with `accl.wait()`.
+- Post-processing:
+  - Grab the first output, call `decode_predictions`, rescale boxes, and draw.
+
+### Making Inferences
+
+Let's change the script to easily handle different images and confidence threshold ([yolov8_m3_detect_v2.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/Hardware_Acceleration/yolov8_mx3_detect_v2.py)). We should replace the hardcoded `IMAGE_PATH` with a command-line argument:
+
+```python
+import argparse
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-i", "--image",
+        type=str,
+        required=True,
+        help="Path to input image"
+    )
+    parser.add_argument(
+        "-c", "--conf",
+        type=float,
+        default=0.25,
+        help="Confidence threshold"
+    )
+    args = parser.parse_args()
+
+    # Configuration
+    DFP_PATH = "./models/yolov8n.dfp"
+    POST_MODEL_PATH = "./models/yolov8n_post.onnx"
+    IMAGE_PATH = args.image
+    CONF_THRESHOLD = args.conf
+
+    # Run detection
+    detections, annotated_image, inference_time = detect_objects(
+        DFP_PATH,
+        POST_MODEL_PATH,
+        IMAGE_PATH,
+        CONF_THRESHOLD
+    )
+
+    # Print results
+    print(f"\n{'='*60}")
+    print("Detection Results:")
+    print(f"{'='*60}")
+    for i, det in enumerate(detections):
+        x1, y1, x2, y2, conf, class_id = det
+        print(f"  {i+1}. {COCO_CLASSES[int(class_id)]}: {conf:.3f}")
+        print(f"      Box: [{int(x1)}, {int(y1)}, {int(x2)}, {int(y2)}]")
+
+    # Save annotated image
+    if len(detections) > 0:
+        output_path = IMAGE_PATH.rsplit('.', 1)[0] + '_detected.jpg'
+        annotated_image.save(output_path)
+        print(f"\nSaved: {output_path}")
+
+    print(f"\n{'='*60}")
+    print(f"Total: {len(detections)} objects")
+    print(f"Time: {inference_time:.2f} ms")
+    print(f"{'='*60}")
+
+```
+
+We can run it as: 
+
+```bash
+python yolov8_mx3_detect_v2.py --image ./images/home-office.jpg -c 0.2
+```
+
+Here are some results with other images:
+
+![](./images/png/yolo-result.png)
+
+## Inference with a custom model
+
+As we saw in the YOLO chapter, we are assuming we are in an industrial facility that must sort and count **wheels** and special **boxes**. 
+
+![](./images/png/factore.png)
+
+Each image can have three classes:
+
+- Background (no objects)
+- Box
+- Wheel
+
+We have captured a raw dataset using the Raspberry Pi Camera and labeled it with the ROBOFLOW. The Yolo model was trained on a Google Colab using Ultralytics. 
+
+
+
+![](./images/png/yolo-custom-dataset-flow.png)
+
+After training, we download the trained model from `/runs/detect/train/weights/best.pt` to our computer, renaming it to `box_wheel_320_yolo.pt`. 
+
+> Using the FileZilla FTP, transfer a few images from the test dataset to `.\images`:
+>
+
+Let's return to the `./MEMRYX/YOLO` folder and using the Python Interpreter, to quickly do some inferences:
+
+```bash
+python
+```
+
+We will import the YOLO library and define the model to use:
+
+```python
+>>> from ultralytics import YOLO
+>>> model = YOLO('./models/box_wheel_320_yolo.pt')
+```
+
+Now, let's define an image and call the inference (we will save the image result this time to external verification):
+
+```python
+>>> img = './images/box_3_wheel_4.jpg'
+>>> result = model.predict(img, save=True, imgsz=320, conf=0.5, iou=0.3)
+```
+
+![](./images/png/test-custon_model-1.png)
+
+![](./images/png/custon-img-1st-infer.png)
+
+We can see that the model is working and that the latency was 168 ms. 
+
+Let's now export the model first to ONNX and after to FFPls
+
+, to run it in the MX3 device:
+
+```bash
+cd ./models
+yolo export model=box_wheel_320_yolo.pt format=onnx
+mx_nc -v --autocrop -m box_wheel_320_yolo.onnx
+cd ..
+```
+
+In the models folder, we will have `box_wheel_320_yolo.dfp` and `box_wheel_320_yolo_post.onnx`
+
+Let's adapt the previous script to be more generic in terms of models ([box_wheel_mx3_detect_v2.py](https://github.com/Mjrovai/EdgeML-with-Raspberry-Pi/blob/main/Hardware_Acceleration/box_wheel_mx3_detect_v2.py)):
+
+> Naturally we should enter with the new models 'names and instead of COCO_LABELS, the script was changed to:
+>
+> ```python
+> # dataset class names 
+> CLASSES = [
+>     'Box', 'Wheel'
+> ]
+> ```
+>
+> Thant's all!
+
+Run it with:
+
+```bash
+python box_wheel_mx3_detect_v2.py --image ./images/box_3_wheel_4.jpg
+```
+
+![](./images/png/infer-mx3-custom-yolo.png)
+
+The Result was great! And the latency (~70 ms) was even smaller than the model exported to NCNN, runing 100% at CPU (80 ms).
+
+### Adjusting Confidence Threshold
+
+Lower confidence for more detections (may include false positives):
+
+```bash
+python box_wheel_mx3_detect_v2.py --image ./images/box_3_wheel_4.jpg -c 0.15
+```
+
+We should experiment with the right confidence threshold. 
+
+## **Advanced Topics**
+
+### Batch Processing (Optimization)
+
+For multiple images, reuse the accelerator instance:
+```python
+accl = AsyncAccl(dfp_path)
+accl.set_postprocessing_model(post_model_path)
+
+for image_path in image_list:
+    detections = detect_single_image(accl, image_path)
+```
+
+### Thermal Management
+
+Always monitor temperature during operation:
+
+```bash
+watch -n 1 cat /sys/memx0/temperature
+```
+
+### Confidence Threshold Tuning
+
+- **0.15-0.20**: Maximum recall (catch everything)
+- **0.25-0.40**: Balanced (default)
+- **0.45-0.50**: High precision (only confident detections)
+
+### Model Selection
+
+- **yolov8n**: Fastest, 3.2M parameters
+- **yolov8s**: Balanced, 11.2M parameters
+- **yolov8m**: Accurate, 25.9M parameters
 
 ## Exploring MemryX eXamples
 
@@ -809,25 +1333,8 @@ After cloning the repository, you'll find several subdirectories with different 
 - **optimized_multistream_apps** - Production-ready multi-stream examples
 - **fun_projects** - Creative applications and demos
 
-### Running an Example
-
-Each example includes its own README with specific instructions. General workflow:
-
-```bash
-# Navigate to an example
-cd image_inference/yolov8
-
-# Install requirements
-pip install -r requirements.txt
-
-# Download pre-compiled models (if available)
-python download_models.py
-
-# Run the example
-python run_yolov8.py
-```
-
 These examples demonstrate best practices for:
+
 - Preprocessing pipelines
 - Multi-threaded inference
 - Output visualization
@@ -852,7 +1359,7 @@ Exploring these examples is an excellent way to learn production-ready patterns 
    ```
 3. **Verify in kernel logs**:
    ```bash
-   dmesg | grep -i memx
+   dmesg | grep -i memryx
    lspci | grep -i memryx
    ```
 
