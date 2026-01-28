@@ -1,4 +1,4 @@
-# Beyond CPU - Hardware Acceleration for Edge AI {.unnumbered}
+# Beyond CPU - Hardware Acceleration for Edge AI
 
 ![](./images/png/portada.png)
 
