@@ -1,4 +1,4 @@
-# Beyond CPU - Hardware Acceleration for Edge AI
+# Beyond CPU - Hardware Acceleration for Edge AI {.unnumbered}
 
 ![](./images/png/portada.png)
 
@@ -38,23 +38,21 @@ By the end of this lab, we will have installed and configured the MX3 hardware o
 
 Before starting this lab, we should have:
 
-**Raspberry Pi 5 with M.2 HAT+ adapter**
+**Raspberry Pi 5 with M.2 HAT+ adapter** (or similar)
 
-![](./images/jpeg/m2hat.jpg)
+![](./images/png/hat.jpg)
 
-For example, the [Seeed PCIe 2.0 to dual M.2 HAT](https://www.seeedstudio.com/PCIe-to-dual-M-2-hat-for-Raspberry-Pi-5-p-5973.html) is a good choice, as we can also install an NVMe SSD alongside the MemryX MX3 M.2 module.
+
+
+> **IMPORTANT NOTE**: MemryX recommends the [GeeekPi N04 M.2 2280 HAT](https://www.amazon.com/GeeekPi-NVMe-Adapter-Raspberry-Support/dp/B0CRK4YB4C) as an excellent choice for the Raspberry Pi 5. It delivers solid power and fits the 2280 MX3 M.2 form factor. Some hats can lead to instabilities, mainly due to PCIe speed (Gen3).  The Raspberry Pi 5 can have stability issues on Gen3.  
+
+The [Raspberry Pi M.2 HAT+](https://www.amazon.com/dp/B0D5CGDJLQ?tag=consecho57301-20&linkCode=osi&th=1&psc=1&ascsubtag=NoCID|da83d918-3f4e-415e-ad00-b1791332db69) is a good option. It works very well, despite the fact that we should adapt the MX3 board to it (The MX3 is longer than the hat).
 
 **MemryX MX3 M.2 module with the heatsink installed** 
 
 For heatsink installation, follow the video instructions: https://youtu.be/wNmka0nrRRE 
 
-![](./images/png/montage.png)
-
-> IMPORTANT NOTE: MemryX recommends the [GeeekPi N04 M.2 2280 HAT](https://www.amazon.com/GeeekPi-NVMe-Adapter-Raspberry-Support/dp/B0CRK4YB4C) as an excellent choice for the Raspberry Pi 5. It delivers solid power and fits the 2280 MX3 M.2 form factor. A dual Hat as I used can lead to instabilities, mainly due to PCIe speed (Gen3).  The Raspberry Pi 5 can have stability issues on Gen3.  
-
-Alternatively, the [Raspberry Pi M.2 HAT+](https://www.amazon.com/dp/B0D5CGDJLQ?tag=consecho57301-20&linkCode=osi&th=1&psc=1&ascsubtag=NoCID|da83d918-3f4e-415e-ad00-b1791332db69) is also an option. It works very well, despite the fact that we should adapt the MX3 board to it (The MX3 is longer than the hat).
-
-![](./images/png/raspi-hat.png)
+![](./images/png/hat-assembly.png)
 
 ### Installation and Cooling Considerations
 
