@@ -720,7 +720,8 @@ python run_inference_comp_resnet50.py
 
 ![](./images/png/run_cpu_mxa_resnet.png)
 
-The performance improvements are even more dramatic with larger models!
+> The performance improvements are even more dramatic with larger models!
+>
 
 ### Clean Shutdown
 
@@ -759,14 +760,14 @@ Here's how the MX3 compares across different deployment approaches we've covered
 
 | Approach | Hardware | MobileNetV2 Latency | ResNet50 Latency | Power (Active) |
 |----------|----------|---------------------|------------------|----------------|
-| TFLite (CPU) | Raspberry Pi 5 | ~150-200 ms | ~600-800 ms | ~ |
-| ExecuTorch/XNNPACK | Raspberry Pi 5 | ~20 ms | ~80-100 ms | ~ |
-| **MemryX MX3** | **Dedicated accelerator** | **~13 ms** | **~35 ms** | **~** |
+| TFLite (CPU) | Raspberry Pi 5 | ~110 ms | ~266 ms | ~ |
+| ExecuTorch/XNNPACK | Raspberry Pi 5 | ~20 ms | NA | ~ |
+| **MemryX MX3** | **Dedicated accelerator** | **~10 ms** | **~10 ms** | **~** |
 
 ### Key Observations
 
-- **11x faster** than unoptimized TFLite on CPU
-- **1.5x faster** than highly optimized ExecuTorch with XNNPACK
+- **25x faster** than unoptimized TFLite on CPU (Resnet50)
+- **2x faster** than highly optimized ExecuTorch with XNNPACK (MobileNetV2)
 - **Minimal CPU load**: The host CPU is free for preprocessing, postprocessing, and application logic
 - **Consistent latency**: Hardware acceleration provides deterministic performance
 - **Power efficiency**: Not measured
@@ -1011,9 +1012,9 @@ Run the script [yolov8_m3_detect.py](https://github.com/Mjrovai/EdgeML-with-Rasp
 python yolov8_m3_detect.py
 ```
 
-As a result, we can see that the models found 4 persons and 1 bus, missing only the stop signal 
+As a result, we can see that the models found 4 persons and 1 bus, missing only the stop signal. Regarding latency, the **MX3 runs inference about 11 times faster than a CPU-only** system. 
 
-> Basically, the same result that we got on the YOLO chapter running yolov11
+> Basically, the same accuracy result that we got on the YOLO chapter running yolov11
 
 ![](./images/png/infer-compar.png)
 
@@ -1261,7 +1262,7 @@ python box_wheel_mx3_detect_v2.py --image ./images/box_3_wheel_4.jpg
 
 ![](./images/png/infer-mx3-custom-yolo.png)
 
-The Result was great! And the latency (~70 ms) was even smaller than the model exported to NCNN, runing 100% at CPU (80 ms).
+The Result was great! **And the latency (~38 ms) was 4 times lower than with the CPU-only** approach (even smaller than the model exported to NCNN, runing 100% at CPU - 80 ms).
 
 ### Adjusting Confidence Threshold
 
@@ -1363,7 +1364,12 @@ Exploring these examples is an excellent way to learn production-ready patterns 
 
 ![](./images/png/check1.png)
 4. **Ensure sufficient power**: Use the official Raspberry Pi 27W power supply
-5. **Check HAT installation**: Ensure the M.2 HAT is properly seated on the Raspberry Pi GPIO
+5. **Check HAT installation**: Ensure the M.2 HAT is properly seated.
+6.  **Lower Frequency**: Try running `sudo mx_set_powermode` with a lower frequency, such as 200 or 300 MHz. Then restart mxa-manager for good measure with `sudo service mxa-manager restart`
+
+    > If decreasing the frequency solves the issue, then you can either keep the default frequency for all DFPs at 300 MHz (or 400, 450, etc.), or you can raise it back to 500 MHz and use the [C++ API's set_operating_frequency function](https://developer.memryx.com/api/accelerator/cpp.html#_CPPv4N2MX7Runtime10MxAcclBase23set_operating_frequencyEiN2MX5Types17MxFrequencyOptionE) to change the clock speed on a per-DFP basis.
+
+![](./images/png/change-freq..png)
 
 ### Compilation Errors
 
@@ -1445,9 +1451,17 @@ Exploring these examples is an excellent way to learn production-ready patterns 
    htop
    ```
 5. **Verify driver version**: Ensure you have the latest drivers
+
    ```bash
    apt policy memx-drivers
    ```
+6. **Verify Frequency**
+
+​        By default, the frequency should be at 500 MHz. Smaller frequencies will reduce the FPS (increase the latency)
+
+```bash
+   mx_bench --hello
+```
 
 ### Import Errors
 
@@ -1526,7 +1540,7 @@ In this lab, we've explored hardware acceleration for edge AI using the MemryX M
 4. ✅ Building complete inference applications
 5. ✅ Comparing CPU vs. dedicated accelerator performance
 
-The MX3 demonstrates that dedicated AI accelerators can provide significant performance improvements for edge applications, achieving **11x speedup** over CPU inference while maintaining accuracy and providing deterministic latency.
+The MX3 demonstrates that dedicated AI accelerators can deliver significant performance improvements for edge applications, achieving FPS several times higher (up to 25x for ResNet-50) than CPU inference while maintaining accuracy and providing deterministic latency.
 
 As edge AI continues to evolve, hardware acceleration will become increasingly important for real-time, power-efficient deployments. The skills we've developed in this lab—understanding the compilation workflow, benchmarking methodologies, and performance optimization—will transfer to other accelerator platforms as well.
 
