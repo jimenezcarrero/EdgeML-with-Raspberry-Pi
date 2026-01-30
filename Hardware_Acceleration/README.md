@@ -296,7 +296,7 @@ Start with a pre-trained model or train your own. MemryX supports models from ma
 
 The model remains in its original format—no framework-specific conversions needed yet. For this lab, we're using MobileNetV2 from Keras Applications, but we could equally use a custom model we have trained for a specific task, as we have seen before.
 
-**Supported Operations**: The MX3 supports most common deep learning operators (convolutions, pooling, activations, etc.). Check the [supported operators](https://developer.memryx.com/specs/operators/operators.htmll) if using custom architectures. Unsupported operations will fall back to CPU, though this is rare for standard vision models.
+**Supported Operations**: The MX3 supports most common deep learning operators (convolutions, pooling, activations, etc.). Check the [supported operators](https://developer.memryx.com/specs/operators/operators.html) if using custom architectures. Unsupported operations will fall back to CPU, though this is rare for standard vision models.
 
 #### Step 2: Compile with Neural Compiler
 
@@ -1595,7 +1595,7 @@ We can check it by the first field of the file, `FREQ4`. If the Raspberry Pi is 
 - **Model Zoo**: Explore pre-optimized models in the MemryX Model Explorer
 - **Async API**: Use AsyncAccl for non-blocking, concurrent processing
 - **Custom Operators**: Learn to handle models with custom layers
-- **Multi-chip Scaling**: Understand how workload distributes across the four accelerators
+- **Multi-chip Scaling**: Understand how the workload distributes across the four accelerators
 
 ## Conclusion
 
@@ -1618,7 +1618,7 @@ As edge AI continues to evolve, hardware acceleration will become increasingly i
 1. [MemryX Developer Hub](https://developer.memryx.com/)
 2. [MX3 Product Brief](https://memryx.com/wp-content/uploads/2025/04/MX3-M.2-AI-Accelerator-Module-Product-brief-DEC25-Gold.pdf)
 3. [Architecture Overview](https://developer.memryx.com/architecture/architecture.html)
-4. [Supported Operators](https://developer.memryx.com/specs/supported_ops.html)
+4. [Supported Operators](https://developer.memryx.com/specs/operators/operators.html)
 
 ### Code and Examples
 
