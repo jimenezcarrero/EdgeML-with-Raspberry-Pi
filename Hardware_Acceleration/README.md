@@ -1,4 +1,4 @@
-# Beyond CPU - Hardware Acceleration for Edge AI 
+# Beyond CPU - Hardware Acceleration for Edge AI {.unnumbered}
 
 ![](./images/png/portada.png)
 
@@ -10,7 +10,7 @@ Throughout this course, we've explored various approaches to deploying AI models
 
 In this chapter, we'll take the next step: **dedicated hardware acceleration**. We'll use the [MemryX MX3 M.2 AI Accelerator Module](https://memryx.com/wp-content/uploads/2025/04/MX3-M.2-AI-Accelerator-Module-Product-brief-DEC25-Gold.pdf)—a specialized processor designed specifically for neural network inference. The MX3 module contains four AI accelerator chips that can run deep learning models with dramatically lower latency and power consumption compared to CPU execution.
 
-![](./images/png/board.png)
+![](./images/png/board.png){width=65% fig-align="center"}
 
 ### Why Hardware Acceleration?
 
@@ -40,7 +40,7 @@ Before starting this lab, we should have:
 
 **Raspberry Pi 5 with M.2 HAT+ adapter** (or similar)
 
-![](./images/png/hat.jpg)
+![](./images/png/hat.jpg){width=65% fig-align="center"}
 
 
 
@@ -52,7 +52,7 @@ The [Raspberry Pi M.2 HAT+](https://www.amazon.com/dp/B0D5CGDJLQ?tag=consecho573
 
 For heatsink installation, follow the video instructions: https://youtu.be/wNmka0nrRRE 
 
-![](./images/png/hat-assembly.png)
+![](./images/png/hat-assembly.png){width=95% fig-align="center"}
 
 ### Installation and Cooling Considerations
 
@@ -283,7 +283,7 @@ With the benchmark results, our MemryX MX3 is properly installed and ready to us
 
 Working with the MemryX MX3 follows a straightforward four-step workflow that differs from traditional CPU-based inference:
 
-![](./images/png/flow.png)
+![](./images/png/flow.png){width=65% fig-align="center"}
 
 #### Step 1: Select or Train a Model
 
@@ -296,7 +296,7 @@ Start with a pre-trained model or train your own. MemryX supports models from ma
 
 The model remains in its original format—no framework-specific conversions needed yet. For this lab, we're using MobileNetV2 from Keras Applications, but we could equally use a custom model we have trained for a specific task, as we have seen before.
 
-**Supported Operations**: The MX3 supports most common deep learning operators (convolutions, pooling, activations, etc.). Check the [supported operators list](https://developer.memryx.com/specs/supported_ops.html) if using custom architectures. Unsupported operations will fall back to CPU, though this is rare for standard vision models.
+**Supported Operations**: The MX3 supports most common deep learning operators (convolutions, pooling, activations, etc.). Check the [supported operators](https://developer.memryx.com/specs/operators/operators.htmll) if using custom architectures. Unsupported operations will fall back to CPU, though this is rare for standard vision models.
 
 #### Step 2: Compile with Neural Compiler
 
@@ -306,10 +306,17 @@ The MemryX Neural Compiler (`mx_nc`) transforms the model into a DFP (Dataflow P
 mx_nc [options] -m <model_file>
 ```
 
-**Common compilation options**:
-- `-v` : Verbose output showing compilation stages
-- `-c <chip_count>` : Target specific number of chips (1-4)
-- `-q <8|4>` : Apply quantization (8-bit or 4-bit)
+The MemryX Neural Compiler, [mx_nc](https://developer.memryx.com/tools/neural_compiler.html), is a command‑line tool that takes one or more neural‑network models (Keras, TensorFlow, TFLite, ONNX, etc.) and compiles them into a MemryX Dataflow Program (DFP) that can run on MemryX accelerators (MXA).  Internally, it does framework import, graph optimization (fusion/splitting, operator expansion, activation approximation), resource mapping on the MXA cores, and finally emits the DFP used by the runtime or simulator.
+
+**What `mx_nc` does:**
+
+- Compiles models into a single DFP file per compilation, then loads it onto one or more MXA chips to run inference.
+
+- Supports multi‑model, multi‑stream, and multi‑chip mapping, automatically distributing models and layers across available MX3 devices for higher throughput.
+
+- Handles mixed‑precision weights (per‑channel 4/8/16‑bit) while keeping activations in floating point on the accelerator. By default, MemryX quantizes weights to INT8 precision and activations to BFloat16.
+
+- Can crop pre/post‑processing parts of the graph so the MXA focuses on the core CNN/ML operators while the host CPU runs the cropped sections.
 
 **What happens during compilation?**
 
@@ -321,6 +328,34 @@ mx_nc [options] -m <model_file>
 6. **Multi-chip distribution**: If using multiple chips, partitions the workload
 
 The compiler is surprisingly tolerant—most models compile without any modifications. If a layer isn't supported, you'll get a clear error message indicating which operation failed.
+
+**Key command‑line options (high level)**
+
+- Model specification:  
+  - `-m` / `--models` – input model file(s) (e.g. `.h5`, `.pb`, `.onnx`, TFLite).  
+  - Multi‑model example: `mx_nc -v -m model_0.h5 model_1.onnx`.  
+
+- Input shapes:  
+  - `-is`, `--input_shapes` – specify input shape(s) when they cannot be inferred, always in NHWC order (e.g. `"224,224,3"`).
+  - Supports `"auto"` for models where shapes can be inferred: `-is "auto" "300,300,3"`.
+
+- Cropping / pre‑ and post‑processing control:  
+  - `--autocrop` – experimental automatic cropping of pre/post‑processing layers. See the YOLOv8 example further in this chapter.
+  - `--inputs`, `--outputs` – manually set which graph nodes are treated as the MXA inputs/outputs; everything outside is cropped to run on the host.
+  - For multi‑model graphs, inputs/outputs of different models are separated with `|` (vertical bar). 
+  - `--model_in_out` – JSON file describing model inputs/outputs for more complex single or multi‑model cases.
+
+- Multi‑chip / system sizing:  
+  - `-c` – number of MXA chips; `-c 2` means compile for two chips and distribute workload across them.
+
+- Diagnostics / verbosity:  
+  - `-v`, `-vv`, etc. – increase verbosity, useful to inspect graph transformations and cropping decisions.
+
+- Extensions / unsupported patterns:  
+  - `--extensions` – load Neural Compiler Extensions (`.nce` files or builtin names) to add or patch graph handling (e.g., complex transformer subgraphs or unsupported ops) without a new SDK release.
+
+> For the complete option list (including less common flags), run `mx_nc -h` or consult the [Neural Compiler](https://developer.memryx.com/tools/neural_compiler.html) page in the MemryX Developer Hub, which documents all arguments and includes usage examples for single‑model, multi‑model, cropping, and mixed‑precision flows.
+>
 
 **Compilation time** varies by model complexity:
 - Small models (MobileNet): ~30 seconds
@@ -343,7 +378,7 @@ The benchmarker:
 - Measures throughput (FPS), latency, and chip utilization
 - Reports first-inference latency (includes loading overhead)
 
-**Why benchmark separately?** Because real-world applications involve preprocessing (image loading, resizing) and postprocessing (parsing outputs). Benchmarking isolates pure inference performance, letting to identify bottlenecks in our full pipeline.
+**Why benchmark separately?** Real-world applications involve preprocessing (image loading and resizing) and postprocessing (parsing outputs). Benchmarking isolates pure inference performance, letting to identify bottlenecks in our full pipeline.
 
 #### Step 4: Integrate into the Application
 
@@ -396,7 +431,7 @@ This workflow is remarkably consistent across models and use cases. Once we've d
 
 ### Download and Compile MobileNetV2
 
-On [Keras Applications](https://keras.io/api/applications/), we can find deep learning models that are made available alongside pre-trained weights. These models can be used for prediction, feature extraction, and fine-tuning.
+In Keras Applications, we can find deep learning models that are provided with pre-trained weights. These models can be used for prediction, feature extraction, and fine-tuning.
 
 Let's download MobileNetV2, which was used in previous labs:
 
@@ -454,7 +489,17 @@ Let's understand what these metrics mean:
 
 The benchmark runs with random input data, which is why we see consistent performance. Real-world performance with actual images should be similar once the preprocessing pipeline is optimized, but we have found bigger latency.
 
-> **Power consumption during benchmarking is around 12W (2.4A), and the module temperature reaches approximately 60°C.** 
+> In true dataflow architecture, latency and FPS are not coupled in the traditional sense; latency does not equal 1/FPS. Note that even though latency is ~2ms in the above benchmarking results, FPS is not measured to be 1000 ms / 2 ms = 500 FPS; rather, the FPS from the benchmarking results is ~1160. 
+
+In MemryX’s dataflow architecture, the “usual” rule (`latency = 1/FPS`) only applies to frame‑to‑frame latency, not to end‑to‑end in‑to‑out latency for a single frame.  That is why we see ~2 ms latency per frame, yet still measure around 1160 FPS in MX3 benchmarks.
+
+**Two different latencies**
+MemryX explicitly distinguishes two metrics.
+
+- Latency 1 (frame‑to‑frame latency): Time between consecutive outputs once the pipeline is full. Its reciprocal is FPS.
+- Latency 2 (full in‑to‑out latency): Time from when the first input frame enters the system (host + MX3 pipeline) until its output appears. This can be larger, but it does not set the FPS.
+
+In a streaming, pipelined accelerator like MX3, multiple frames are in‑flight simultaneously, so the pipeline “fills” once and then produces results at a steady cadence.
 
 ## Building an Inference Application
 
@@ -480,7 +525,7 @@ wget "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg" \
 
 Here is the image:
 
-![](./images/png/cat.png)
+![](./images/png/cat.png){width=65% fig-align="center"}
 
 ### Understanding Input Requirements
 
@@ -831,7 +876,7 @@ The model and the image `bus.jpg` will be download and tested with the YOLOV8n:
 
 Under `./runs/detect`, the output processed image can be analysed: 
 
-![](./images/png/yolov8-1st-infer.png)
+![](./images/png/yolov8-1st-infer.png){width=65% fig-align="center"}
 
 ### Model Export and Compilation
 
@@ -1016,7 +1061,7 @@ As a result, we can see that the models found 4 persons and 1 bus, missing only 
 
 > Basically, the same accuracy result that we got on the YOLO chapter running yolov11
 
-![](./images/png/infer-compar.png)
+![](./images/png/infer-compar.png){width=95% fig-align="center"}
 
 ### Going deeper in the functions
 
@@ -1183,7 +1228,7 @@ Here are some results with other images:
 
 As we saw in the YOLO chapter, we are assuming we are in an industrial facility that must sort and count **wheels** and special **boxes**. 
 
-![](./images/png/factore.png)
+![](./images/png/factore.png){width=85% fig-align="center"}
 
 Each image can have three classes:
 
@@ -1224,7 +1269,7 @@ Now, let's define an image and call the inference (we will save the image result
 
 ![](./images/png/test-custon_model-1.png)
 
-![](./images/png/custon-img-1st-infer.png)
+![](./images/png/custon-img-1st-infer.png){width=65% fig-align="center"}
 
 We can see that the model is working and that the latency was 168 ms. 
 
@@ -1260,7 +1305,7 @@ Run it with:
 python box_wheel_mx3_detect_v2.py --image ./images/box_3_wheel_4.jpg
 ```
 
-![](./images/png/infer-mx3-custom-yolo.png)
+![](./images/png/infer-mx3-custom-yolo.png){width=85% fig-align="center"}
 
 The Result was great! **And the latency (~38 ms) was 4 times lower than with the CPU-only** approach (even smaller than the model exported to NCNN, runing 100% at CPU - 80 ms).
 
@@ -1368,8 +1413,28 @@ Exploring these examples is an excellent way to learn production-ready patterns 
 6.  **Lower Frequency**: Try running `sudo mx_set_powermode` with a lower frequency, such as 200 or 300 MHz. Then restart mxa-manager for good measure with `sudo service mxa-manager restart`
 
     > If decreasing the frequency solves the issue, then you can either keep the default frequency for all DFPs at 300 MHz (or 400, 450, etc.), or you can raise it back to 500 MHz and use the [C++ API's set_operating_frequency function](https://developer.memryx.com/api/accelerator/cpp.html#_CPPv4N2MX7Runtime10MxAcclBase23set_operating_frequencyEiN2MX5Types17MxFrequencyOptionE) to change the clock speed on a per-DFP basis.
+    
+    ```bash
+    sudo mx_set_powermode
+    ```
+    
+    
 
 ![](./images/png/change-freq..png)
+
+```bash
+sudo service mxa-manager restart
+```
+
+Check the frequency with the following command:
+
+```bash
+cat /etc/memryx/power.conf
+```
+
+![](./images/png/check-freq.png)
+
+We can check it by the first field of the file, `FREQ4`. If the Raspberry Pi is set to the module's default operating frequency (500 MHz), we should see `FREQ4C=500`, indicating that the module is set to a 500 MHz clock speed for 4-chip DFPs. 
 
 ### Compilation Errors
 
