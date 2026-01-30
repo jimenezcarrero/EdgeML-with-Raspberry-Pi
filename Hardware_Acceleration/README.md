@@ -1409,12 +1409,11 @@ Exploring these examples is an excellent way to learn production-ready patterns 
 4. **Ensure sufficient power**: Use the official Raspberry Pi 27W power supply
 5. **Check HAT installation**: Ensure the M.2 HAT is properly seated.
 6.  **Lower Frequency**: Try running `sudo mx_set_powermode` with a lower frequency, such as 200 or 300 MHz. Then restart mxa-manager for good measure with `sudo service mxa-manager restart`
-
-    > If decreasing the frequency solves the issue, then you can either keep the default frequency for all DFPs at 300 MHz (or 400, 450, etc.), or you can raise it back to 500 MHz and use the [C++ API's set_operating_frequency function](https://developer.memryx.com/api/accelerator/cpp.html#_CPPv4N2MX7Runtime10MxAcclBase23set_operating_frequencyEiN2MX5Types17MxFrequencyOptionE) to change the clock speed on a per-DFP basis.
     
-    ```bash
-    sudo mx_set_powermode
-    ```
+    
+```bash
+sudo mx_set_powermode
+```
     
     
 
@@ -1433,6 +1432,8 @@ cat /etc/memryx/power.conf
 ![](./images/png/check-freq.png)
 
 We can check it by the first field of the file, `FREQ4`. If the Raspberry Pi is set to the module's default operating frequency (500 MHz), we should see `FREQ4C=500`, indicating that the module is set to a 500 MHz clock speed for 4-chip DFPs. 
+
+> If decreasing the frequency solves the issue, then you can either keep the default frequency for all DFPs at 300 MHz (or 400, 450, etc.), or you can raise it back to 500 MHz and use the [C++ API's set_operating_frequency function](https://developer.memryx.com/api/accelerator/cpp.html#_CPPv4N2MX7Runtime10MxAcclBase23set_operating_frequencyEiN2MX5Types17MxFrequencyOptionE) to change the clock speed on a per-DFP basis.
 
 ### Compilation Errors
 
