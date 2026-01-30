@@ -1406,8 +1406,11 @@ Exploring these examples is an excellent way to learn production-ready patterns 
    ```
 
 ![](./images/png/check1.png)
+
 4. **Ensure sufficient power**: Use the official Raspberry Pi 27W power supply
+
 5. **Check HAT installation**: Ensure the M.2 HAT is properly seated.
+
 6.  **Lower Frequency**: Try running `sudo mx_set_powermode` with a lower frequency, such as 200 or 300 MHz. Then restart mxa-manager for good measure with `sudo service mxa-manager restart`
     
     
@@ -1526,7 +1529,7 @@ We can check it by the first field of the file, `FREQ4`. If the Raspberry Pi is 
 ​        By default, the frequency should be at 500 MHz. Smaller frequencies will reduce the FPS (increase the latency)
 
 ```bash
-   mx_bench --hello
+   cat /etc/memryx/power.conf
 ```
 
 ### Import Errors
