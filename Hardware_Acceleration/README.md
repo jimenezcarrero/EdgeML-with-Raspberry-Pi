@@ -1,4 +1,4 @@
-# Beyond CPU - Hardware Acceleration for Edge AI {.unnumbered}
+# Beyond CPU - Hardware Acceleration for Edge AI
 
 ![](./images/png/portada.png)
 
@@ -868,7 +868,7 @@ Now,  download the YOLOv8.pt model and test it:
 yolo predict model='yolov8n' source='https://ultralytics.com/images/bus.jpg'
 ```
 
-The model and the image `bus.jpg` will be download and tested with the YOLOV8n:
+The model and the image `bus.jpg` will be downloaded and tested with the YOLOV8n:
 
 ![](./images/png/yolov8n-test.png)
 
@@ -986,8 +986,6 @@ CONF_THRESHOLD = 0.25
 - `IMAGE_PATH`: image file we want to run detection on.  
 - `CONF_THRESHOLD`: minimum confidence score; detections below this are filtered out.
 
-In a tutorial you can explain that changing these values lets the user swap models or images without modifying the rest of the code.
-
 #### Running detection
 
 ```python
@@ -1063,7 +1061,7 @@ As a result, we can see that the models found 4 persons and 1 bus, missing only 
 
 ![](./images/png/infer-compar.png){width=95% fig-align="center"}
 
-### Going deeper in the functions
+### Going deeper into the functions
 
 #### 1. Image preprocessing (`preprocess_image`)
 
@@ -1120,7 +1118,7 @@ As a result, we can see that the models found 4 persons and 1 bus, missing only 
 
 *Everything after the model must undo what preprocessing did.*
 
-- During preprocessing we:
+- During preprocessing, we:
   - Rescaled the image by `ratio`.
   - Padded by `(pad_w, pad_h)`.
 - The model’s boxes live in that padded, resized 640×640 space.
