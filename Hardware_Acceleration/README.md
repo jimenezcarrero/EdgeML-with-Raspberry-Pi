@@ -834,8 +834,6 @@ The MX3 may be overkill for:
 - ❌ Prototyping where development speed matters more than performance
 - ❌ Very cost-sensitive applications
 
-Perfect! You have a clean, working script. Let me help you create a comprehensive tutorial structure for YOLOv8 inference with MX3 hardware acceleration. Here's what I suggest:
-
 ## YOLOv8 Object Detection with MX3 Hardware Acceleration
 
 In this part of the lab, we'll deploy YOLOv8n (nano) for real-time object detection using the MemryX MX3 AI accelerator on Raspberry Pi 5. We'll cover the complete workflow from model export to inference optimization.
