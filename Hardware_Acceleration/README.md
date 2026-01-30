@@ -1510,10 +1510,12 @@ We can check it by the first field of the file, `FREQ4`. If the Raspberry Pi is 
    # Advanced Options → PCIe Speed
    ```
 3. **Close other PCIe-intensive applications**: Ensure no other devices are saturating the PCIe bus
+
 4. **Check for background CPU load**:
    ```bash
    htop
    ```
+   
 5. **Verify driver version**: Ensure you have the latest drivers
 
    ```bash
